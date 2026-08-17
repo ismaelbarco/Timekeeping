@@ -3,45 +3,301 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Timekeeping</title>
+    <title>Timekeeping Dashboard</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg: #0f172a;
+            --bg-2: #1e293b;
+            --card: rgba(255, 255, 255, 0.04);
+            --border: rgba(255, 255, 255, 0.08);
+            --text: #f1f5f9;
+            --muted: #94a3b8;
+            --accent: #38bdf8;
+            --accent-2: #818cf8;
+            --success: #34d399;
+            --warning: #fbbf24;
+        }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-            color: #f1f5f9;
+            background: linear-gradient(135deg, var(--bg) 0%, var(--bg-2) 100%);
+            color: var(--text);
             min-height: 100vh;
             display: flex;
-            align-items: center;
-            justify-content: center;
         }
-        .card {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 16px;
-            padding: 3rem 4rem;
-            text-align: center;
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+        .sidebar {
+            width: 240px;
+            background: rgba(0, 0, 0, 0.2);
+            border-right: 1px solid var(--border);
+            padding: 1.5rem 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
         }
-        h1 {
-            font-size: 2.5rem;
+        .logo {
+            font-size: 1.25rem;
             font-weight: 700;
-            background: linear-gradient(90deg, #38bdf8, #818cf8);
+            background: linear-gradient(90deg, var(--accent), var(--accent-2));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 0.75rem;
+            margin-bottom: 2rem;
+            padding: 0 0.5rem;
         }
-        p {
-            font-size: 1.1rem;
-            color: #94a3b8;
+        .nav-item {
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            color: var(--muted);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.95rem;
+        }
+        .nav-item:hover { background: rgba(255, 255, 255, 0.05); color: var(--text); }
+        .nav-item.active {
+            background: linear-gradient(90deg, rgba(56, 189, 248, 0.15), rgba(129, 140, 248, 0.15));
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+        .main {
+            flex: 1;
+            padding: 2rem 2.5rem;
+            overflow-y: auto;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        .header h1 { font-size: 1.75rem; font-weight: 600; }
+        .header p { color: var(--muted); font-size: 0.9rem; margin-top: 0.25rem; }
+        .clock {
+            text-align: right;
+        }
+        .clock-time {
+            font-size: 2rem;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            background: linear-gradient(90deg, var(--accent), var(--accent-2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .clock-date { color: var(--muted); font-size: 0.85rem; }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+        }
+        .card {
+            background: var(--card);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+        .stat-label {
+            color: var(--muted);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+        }
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+        .stat-delta {
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+            color: var(--success);
+        }
+        .stat-delta.warn { color: var(--warning); }
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.25rem;
+        }
+        .card-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .badge {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.6rem;
+            border-radius: 999px;
+            background: rgba(56, 189, 248, 0.15);
+            color: var(--accent);
+            font-weight: 500;
+        }
+        table { width: 100%; border-collapse: collapse; }
+        th, td {
+            text-align: left;
+            padding: 0.75rem 0.5rem;
+            font-size: 0.9rem;
+            border-bottom: 1px solid var(--border);
+        }
+        th {
+            color: var(--muted);
+            font-weight: 500;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        td { font-variant-numeric: tabular-nums; }
+        .status {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        .status.approved { background: rgba(52, 211, 153, 0.15); color: var(--success); }
+        .status.pending { background: rgba(251, 191, 36, 0.15); color: var(--warning); }
+        .activity-item {
+            display: flex;
+            gap: 0.75rem;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.9rem;
+        }
+        .activity-item:last-child { border-bottom: none; }
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent);
+            margin-top: 0.5rem;
+            flex-shrink: 0;
+        }
+        .activity-time { color: var(--muted); font-size: 0.8rem; margin-top: 0.25rem; }
+        @media (max-width: 900px) {
+            .sidebar { display: none; }
+            .grid-2 { grid-template-columns: 1fr; }
+            .main { padding: 1.5rem; }
         }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h1>Timekeeping 2027 - Company A</h1>
-        <p>This is my third deployment practice.</p>
-    </div>
+    <aside class="sidebar">
+        <div class="logo">⏱ Timekeeping</div>
+        <div class="nav-item active">Dashboard</div>
+        <div class="nav-item">Timesheets</div>
+        <div class="nav-item">Projects</div>
+        <div class="nav-item">Reports</div>
+        <div class="nav-item">Team</div>
+        <div class="nav-item">Settings</div>
+    </aside>
+
+    <main class="main">
+        <div class="header">
+            <div>
+                <h1>Dashboard</h1>
+                <p>Welcome back — here's your activity summary</p>
+            </div>
+            <div class="clock">
+                <div class="clock-time" id="clock-time">--:--:--</div>
+                <div class="clock-date" id="clock-date">—</div>
+            </div>
+        </div>
+
+        <div class="stats">
+            <div class="card">
+                <div class="stat-label">Hours Today</div>
+                <div class="stat-value">6.5h</div>
+                <div class="stat-delta">+0.5h vs avg</div>
+            </div>
+            <div class="card">
+                <div class="stat-label">This Week</div>
+                <div class="stat-value">34.2h</div>
+                <div class="stat-delta">On track</div>
+            </div>
+            <div class="card">
+                <div class="stat-label">Overtime</div>
+                <div class="stat-value">2.8h</div>
+                <div class="stat-delta warn">+1.2h this week</div>
+            </div>
+            <div class="card">
+                <div class="stat-label">Active Projects</div>
+                <div class="stat-value">5</div>
+                <div class="stat-delta">2 due soon</div>
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <div class="card">
+                <div class="card-title">
+                    Weekly Timesheet
+                    <span class="badge">Week 33</span>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Day</th>
+                            <th>Start</th>
+                            <th>End</th>
+                            <th>Hours</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Monday</td><td>09:00</td><td>17:30</td><td>8.0</td><td><span class="status approved">Approved</span></td></tr>
+                        <tr><td>Tuesday</td><td>08:45</td><td>17:15</td><td>8.0</td><td><span class="status approved">Approved</span></td></tr>
+                        <tr><td>Wednesday</td><td>09:15</td><td>18:00</td><td>8.5</td><td><span class="status approved">Approved</span></td></tr>
+                        <tr><td>Thursday</td><td>09:00</td><td>17:45</td><td>8.2</td><td><span class="status pending">Pending</span></td></tr>
+                        <tr><td>Friday</td><td>09:00</td><td>15:30</td><td>6.5</td><td><span class="status pending">Pending</span></td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Recent Activity</div>
+                <div class="activity-item">
+                    <div class="dot"></div>
+                    <div>
+                        <div>Timesheet submitted</div>
+                        <div class="activity-time">Today, 15:30</div>
+                    </div>
+                </div>
+                <div class="activity-item">
+                    <div class="dot" style="background: var(--success)"></div>
+                    <div>
+                        <div>Wednesday approved by manager</div>
+                        <div class="activity-time">Today, 10:12</div>
+                    </div>
+                </div>
+                <div class="activity-item">
+                    <div class="dot" style="background: var(--accent-2)"></div>
+                    <div>
+                        <div>Added to Project Atlas</div>
+                        <div class="activity-time">Yesterday, 14:20</div>
+                    </div>
+                </div>
+                <div class="activity-item">
+                    <div class="dot" style="background: var(--warning)"></div>
+                    <div>
+                        <div>Overtime request pending</div>
+                        <div class="activity-time">2 days ago</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function tick() {
+            const now = new Date();
+            const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            const date = now.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+            document.getElementById('clock-time').textContent = time;
+            document.getElementById('clock-date').textContent = date;
+        }
+        tick();
+        setInterval(tick, 1000);
+    </script>
 </body>
 </html>
