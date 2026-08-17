@@ -1,6 +1,8 @@
 <?php
+header('Content-Type: application/json');
+
 try {
-    $db = new PDO('sqlite:timekeeping.db');
+    $db = new PDO('sqlite:' . __DIR__ . '/timekeeping.db');
     $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ATTR_ERRMODE_EXCEPTION);
 
     $db->exec('CREATE TABLE IF NOT EXISTS entries (
@@ -15,5 +17,5 @@ try {
     echo json_encode(['success' => true, 'message' => 'Database initialized']);
 } catch (PDOException $e) {
     http_response_code(500);
-    echo json_encode(['error' => $e->getMessage()]);
+    echo json_encode(['error' => 'Database initialization failed']);
 }
