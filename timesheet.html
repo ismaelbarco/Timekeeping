@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timesheet - Timekeeping</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg: #0f172a;
+            --bg-2: #1e293b;
+            --card: rgba(255, 255, 255, 0.04);
+            --border: rgba(255, 255, 255, 0.08);
+            --text: #f1f5f9;
+            --muted: #94a3b8;
+            --accent: #38bdf8;
+            --accent-2: #818cf8;
+            --success: #34d399;
+            --danger: #f87171;
+            --warning: #fbbf24;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, var(--bg) 0%, var(--bg-2) 100%);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+        }
+        .sidebar {
+            width: 240px;
+            background: rgba(0, 0, 0, 0.2);
+            border-right: 1px solid var(--border);
+            padding: 1.5rem 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .logo {
+            font-size: 1.25rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, var(--accent), var(--accent-2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 2rem;
+            padding: 0 0.5rem;
+        }
+        .nav-item {
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            color: var(--muted);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.95rem;
+            text-decoration: none;
+            display: block;
+        }
+        .nav-item:hover { background: rgba(255, 255, 255, 0.05); color: var(--text); }
+        .nav-item.active {
+            background: linear-gradient(90deg, rgba(56, 189, 248, 0.15), rgba(129, 140, 248, 0.15));
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+        .main {
+            flex: 1;
+            padding: 2rem 2.5rem;
+            overflow-y: auto;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        .header h1 { font-size: 1.75rem; font-weight: 600; }
+        .header p { color: var(--muted); font-size: 0.9rem; margin-top: 0.25rem; }
+        .card {
+            background: var(--card);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.25rem;
+        }
+        .card-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1.25rem;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+        }
+        .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+        label { font-size: 0.8rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        input, select, textarea {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.65rem 0.85rem;
+            color: var(--text);
+            font-size: 0.9rem;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+        textarea { resize: vertical; min-height: 60px; }
+        .btn {
+            padding: 0.7rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .btn-primary {
+            background: linear-gradient(90deg, var(--accent), var(--accent-2));
+            color: #0f172a;
+        }
+        .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+        .btn-danger {
+            background: rgba(248, 113, 113, 0.15);
+            color: var(--danger);
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+        }
+        .btn-danger:hover { background: rgba(248, 113, 113, 0.25); }
+        .form-actions { margin-top: 1rem; display: flex; gap: 0.75rem; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td {
+            text-align: left;
+            padding: 0.75rem 0.5rem;
+            font-size: 0.9rem;
+            border-bottom: 1px solid var(--border);
+        }
+        th {
+            color: var(--muted);
+            font-weight: 500;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        td { font-variant-numeric: tabular-nums; }
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--muted);
+        }
+        .empty-state span { font-size: 2rem; display: block; margin-bottom: 0.75rem; }
+        .toast {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            padding: 0.85rem 1.25rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s;
+            z-index: 100;
+        }
+        .toast.show { opacity: 1; transform: translateY(0); }
+        .toast.success { background: rgba(52, 211, 153, 0.2); color: var(--success); border: 1px solid rgba(52, 211, 153, 0.3); }
+        .toast.error { background: rgba(248, 113, 113, 0.2); color: var(--danger); border: 1px solid rgba(248, 113, 113, 0.3); }
+        .summary-bar {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 1.25rem;
+        }
+        .summary-item { font-size: 0.9rem; }
+        .summary-item strong {
+            font-size: 1.4rem;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            background: linear-gradient(90deg, var(--accent), var(--accent-2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .summary-item span { color: var(--muted); display: block; font-size: 0.8rem; margin-top: 0.2rem; }
+        @media (max-width: 900px) {
+            .sidebar { display: none; }
+            .main { padding: 1.5rem; }
+            .form-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="logo">Timekeeping</div>
+        <a href="index.html" class="nav-item">Dashboard</a>
+        <a href="timesheet.html" class="nav-item active">Timesheets</a>
+        <div class="nav-item">Projects</div>
+        <div class="nav-item">Reports</div>
+        <div class="nav-item">Team</div>
+        <div class="nav-item">Settings</div>
+    </aside>
+
+    <main class="main">
+        <div class="header">
+            <div>
+                <h1>Timesheet</h1>
+                <p>Log and manage your time entries</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">Log Hours</div>
+            <form id="entry-form">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="date">Date</label>
+                        <input type="date" id="date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="project">Project</label>
+                        <select id="project" required>
+                            <option value="">Select project</option>
+                            <option value="Project Atlas">Project Atlas</option>
+                            <option value="Website Redesign">Website Redesign</option>
+                            <option value="Mobile App">Mobile App</option>
+                            <option value="Internal Tools">Internal Tools</option>
+                            <option value="Client Support">Client Support</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="hours">Hours</label>
+                        <input type="number" id="hours" step="0.25" min="0.25" max="24" placeholder="e.g. 8" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="notes">Notes</label>
+                        <input type="text" id="notes" placeholder="What did you work on?">
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Add Entry</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="summary-bar">
+            <div class="summary-item">
+                <strong id="total-hours">0</strong>
+                <span>Total Hours</span>
+            </div>
+            <div class="summary-item">
+                <strong id="total-entries">0</strong>
+                <span>Entries</span>
+            </div>
+            <div class="summary-item">
+                <strong id="avg-hours">0</strong>
+                <span>Avg per Entry</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">Time Entries</div>
+            <div id="entries-container">
+                <div class="empty-state">
+                    <span>Loading...</span>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const API = 'api/entries.php';
+        const form = document.getElementById('entry-form');
+        const dateInput = document.getElementById('date');
+        const projectInput = document.getElementById('project');
+        const hoursInput = document.getElementById('hours');
+        const notesInput = document.getElementById('notes');
+
+        dateInput.valueAsDate = new Date();
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type} show`;
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        async function fetchEntries() {
+            try {
+                const res = await fetch(API);
+                const entries = await res.json();
+                renderEntries(entries);
+            } catch (e) {
+                document.getElementById('entries-container').innerHTML =
+                    '<div class="empty-state"><span>Unable to connect to server</span><p>Make sure PHP is running: <code>php -S localhost:8000</code></p></div>';
+            }
+        }
+
+        function renderEntries(entries) {
+            const container = document.getElementById('entries-container');
+            document.getElementById('total-hours').textContent = entries.reduce((s, e) => s + parseFloat(e.hours), 0).toFixed(1);
+            document.getElementById('total-entries').textContent = entries.length;
+            document.getElementById('avg-hours').textContent = entries.length ? (entries.reduce((s, e) => s + parseFloat(e.hours), 0) / entries.length).toFixed(1) : '0';
+
+            if (!entries.length) {
+                container.innerHTML = '<div class="empty-state"><span>No entries yet</span><p>Log your first hours above</p></div>';
+                return;
+            }
+
+            let html = '<table><thead><tr><th>Date</th><th>Project</th><th>Hours</th><th>Notes</th><th></th></tr></thead><tbody>';
+            entries.forEach(e => {
+                html += `<tr>
+                    <td>${new Date(e.date).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}</td>
+                    <td>${e.project}</td>
+                    <td>${parseFloat(e.hours).toFixed(2)}h</td>
+                    <td style="color: var(--muted)">${e.notes || '-'}</td>
+                    <td><button class="btn btn-danger" onclick="deleteEntry(${e.id})">Delete</button></td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        async function deleteEntry(id) {
+            if (!confirm('Delete this entry?')) return;
+            try {
+                await fetch(`${API}?id=${id}`, { method: 'DELETE' });
+                showToast('Entry deleted');
+                fetchEntries();
+            } catch (e) {
+                showToast('Failed to delete', 'error');
+            }
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try {
+                const res = await fetch(API, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        date: dateInput.value,
+                        project: projectInput.value,
+                        hours: parseFloat(hoursInput.value),
+                        notes: notesInput.value
+                    })
+                });
+                if (!res.ok) throw new Error();
+                showToast('Entry added');
+                form.reset();
+                dateInput.valueAsDate = new Date();
+                fetchEntries();
+            } catch (e) {
+                showToast('Failed to add entry', 'error');
+            }
+        });
+
+        fetchEntries();
+    </script>
+</body>
+</html>

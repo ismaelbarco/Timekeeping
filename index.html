@@ -48,6 +48,8 @@
             border-radius: 8px;
             color: var(--muted);
             cursor: pointer;
+            text-decoration: none;
+            display: block;
             transition: all 0.2s;
             font-size: 0.95rem;
         }
@@ -185,8 +187,8 @@
 <body>
     <aside class="sidebar">
         <div class="logo">⏱ Timekeeping</div>
-        <div class="nav-item active">Dashboard</div>
-        <div class="nav-item">Timesheets</div>
+        <a href="index.html" class="nav-item active">Dashboard</a>
+        <a href="timesheet.html" class="nav-item">Timesheets</a>
         <div class="nav-item">Projects</div>
         <div class="nav-item">Reports</div>
         <div class="nav-item">Team</div>
