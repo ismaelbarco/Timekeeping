@@ -1,0 +1,4 @@
+# Local SQLite database — do not commit or expose publicly
+*.db
+*.sqlite
+*.sqlite3
